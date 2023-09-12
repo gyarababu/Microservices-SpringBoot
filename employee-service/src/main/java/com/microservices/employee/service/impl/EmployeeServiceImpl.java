@@ -4,6 +4,7 @@ import com.microservices.employee.dto.EmployeeDto;
 import com.microservices.employee.entity.Employee;
 import com.microservices.employee.repository.EmployeeRepository;
 import com.microservices.employee.service.EmployeeService;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -12,24 +13,17 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Autowired
     private EmployeeRepository employeeRepository;
+
+    @Autowired
+    private ModelMapper modelMapper;
     @Override
     public EmployeeDto saveEmployee(EmployeeDto employeeDto) {
 
-        Employee employee = new Employee(
-                employeeDto.getId(),
-                employeeDto.getFirstName(),
-                employeeDto.getLastName(),
-                employeeDto.getEmail()
-        );
+        Employee employee = mapToEntity(employeeDto);
 
         Employee savedEmployee = employeeRepository.save(employee);
 
-        EmployeeDto savedDto = new EmployeeDto(
-                savedEmployee.getId(),
-                savedEmployee.getFirstName(),
-                savedEmployee.getLastName(),
-                savedEmployee.getEmail()
-        );
+        EmployeeDto savedDto = mapToDto(employee);
 
         return savedDto;
     }
@@ -39,13 +33,20 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         Employee employee = employeeRepository.findById(employeeId).get();
 
-        EmployeeDto employeeDto = new EmployeeDto(
-                employee.getId(),
-                employee.getFirstName(),
-                employee.getLastName(),
-                employee.getEmail()
-        );
+        EmployeeDto employeeDto = mapToDto(employee);
 
         return employeeDto;
+    }
+
+    // modelMapper entity to dto
+    private EmployeeDto mapToDto(Employee employee){
+        EmployeeDto employeeDto = modelMapper.map(employee, EmployeeDto.class);
+        return employeeDto;
+    }
+
+    // modelMapper dto to entity
+    private Employee mapToEntity(EmployeeDto employeeDto){
+        Employee employee = modelMapper.map(employeeDto, Employee.class);
+        return employee;
     }
 }
