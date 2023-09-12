@@ -1,13 +1,18 @@
 package com.microservices.employee.service.impl;
 
+import com.microservices.employee.dto.APIResponseDto;
+import com.microservices.employee.dto.DepartmentDto;
 import com.microservices.employee.dto.EmployeeDto;
 import com.microservices.employee.entity.Employee;
+import com.microservices.employee.exception.DepartmentNotFoundException;
 import com.microservices.employee.exception.ResourceNotFoundException;
 import com.microservices.employee.repository.EmployeeRepository;
 import com.microservices.employee.service.EmployeeService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 @Service
 public class EmployeeServiceImpl implements EmployeeService {
@@ -17,6 +22,9 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Autowired
     private ModelMapper modelMapper;
+
+    @Autowired
+    private RestTemplate restTemplate;
     @Override
     public EmployeeDto saveEmployee(EmployeeDto employeeDto) {
 
@@ -30,14 +38,32 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
-    public EmployeeDto getEmployeeById(long employeeId) {
+    public APIResponseDto getEmployeeById(long employeeId) {
 
         Employee employee = employeeRepository.findById(employeeId).orElseThrow(() ->
                 new ResourceNotFoundException("Employee","id",employeeId));
 
+        String departmentCode = employee.getDepartmentCode();
+        if (departmentCode == null || departmentCode.isEmpty()) {
+            throw new DepartmentNotFoundException("Department","departmentCode",departmentCode);
+        }
+
+        // synchronous communication using restTemplate
+        ResponseEntity<DepartmentDto> responseEntity = restTemplate
+                .getForEntity("http://localhost:8081/api/departments/"
+                                + employee.getDepartmentCode(), DepartmentDto.class);
+
+        // getting department details
+        DepartmentDto departmentDto = responseEntity.getBody();
+
         EmployeeDto employeeDto = mapToDto(employee);
 
-        return employeeDto;
+        APIResponseDto apiResponseDto = new APIResponseDto();
+        apiResponseDto.setEmployee(employeeDto);
+        apiResponseDto.setDepartment(departmentDto);
+
+        // returning both details
+        return apiResponseDto;
     }
 
     // modelMapper entity to dto

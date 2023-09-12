@@ -21,6 +21,15 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<APIErrorDetails>(apiErrorDetails, HttpStatus.NOT_FOUND);
     }
 
+    @ExceptionHandler(DepartmentNotFoundException.class)
+    public ResponseEntity<APIErrorDetails> handleNumberFormatException(DepartmentNotFoundException exception,
+                                                                       WebRequest webRequest) {
+        APIErrorDetails apiErrorDetails = new APIErrorDetails(new Date(),
+                exception.getMessage(),
+                webRequest.getDescription(false));
+        return new ResponseEntity<>(apiErrorDetails, HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<APIErrorDetails> handleGlobalException(Exception exception,
                                                                  WebRequest webRequest){
