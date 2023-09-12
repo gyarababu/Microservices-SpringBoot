@@ -8,6 +8,7 @@ import com.microservices.employee.exception.DepartmentNotFoundException;
 import com.microservices.employee.exception.ResourceNotFoundException;
 import com.microservices.employee.repository.EmployeeRepository;
 import com.microservices.employee.service.EmployeeService;
+import com.microservices.employee.service.FeignAPI;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -24,7 +25,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     private ModelMapper modelMapper;
 
     @Autowired
-    private RestTemplate restTemplate;
+    private FeignAPI feignAPI;
     @Override
     public EmployeeDto saveEmployee(EmployeeDto employeeDto) {
 
@@ -48,13 +49,8 @@ public class EmployeeServiceImpl implements EmployeeService {
             throw new DepartmentNotFoundException("Department","departmentCode",departmentCode);
         }
 
-        // synchronous communication using restTemplate
-        ResponseEntity<DepartmentDto> responseEntity = restTemplate
-                .getForEntity("http://localhost:8081/api/departments/"
-                                + employee.getDepartmentCode(), DepartmentDto.class);
-
-        // getting department details
-        DepartmentDto departmentDto = responseEntity.getBody();
+        // synchronous communication using feignClient and getting department details
+        DepartmentDto departmentDto = feignAPI.getDepartment(employee.getDepartmentCode());
 
         EmployeeDto employeeDto = mapToDto(employee);
 
