@@ -2,6 +2,7 @@ package com.microservices.employee.service.impl;
 
 import com.microservices.employee.dto.EmployeeDto;
 import com.microservices.employee.entity.Employee;
+import com.microservices.employee.exception.ResourceNotFoundException;
 import com.microservices.employee.repository.EmployeeRepository;
 import com.microservices.employee.service.EmployeeService;
 import org.modelmapper.ModelMapper;
@@ -31,7 +32,8 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     public EmployeeDto getEmployeeById(long employeeId) {
 
-        Employee employee = employeeRepository.findById(employeeId).get();
+        Employee employee = employeeRepository.findById(employeeId).orElseThrow(() ->
+                new ResourceNotFoundException("Employee","id",employeeId));
 
         EmployeeDto employeeDto = mapToDto(employee);
 

@@ -2,6 +2,7 @@ package com.microservices.department.service.impl;
 
 import com.microservices.department.dto.DepartmentDto;
 import com.microservices.department.entity.Department;
+import com.microservices.department.exception.DepartmentNotFoundException;
 import com.microservices.department.repository.DepartmentRepository;
 import com.microservices.department.service.DepartmentService;
 import org.modelmapper.ModelMapper;
@@ -26,7 +27,7 @@ public class DepartmentServiceImpl implements DepartmentService {
         Department savedDepartment = departmentRepository.save(department);
 
         // entity to dto
-        DepartmentDto savedDto = mapToDto(department);
+        DepartmentDto savedDto = mapToDto(savedDepartment);
 
         // return dto
         return savedDto;
@@ -37,6 +38,10 @@ public class DepartmentServiceImpl implements DepartmentService {
 
         // find department by code
         Department department = departmentRepository.findByDepartmentCode(departmentCode);
+
+        if (department == null) {
+            throw new DepartmentNotFoundException("Department","departmentCode",departmentCode);
+        }
 
         // convert entity to dto
         DepartmentDto newDepartmentDto = mapToDto(department);
